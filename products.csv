@@ -1,0 +1,6 @@
+id,name,preis_eur,provision_prozent,verkauft,trend,kategorie,vorteile,bilder,aktiv,notiz
+mini-mixer,Tragbarer Mini-Mixer USB-C,24.99,15,3200,4,Küche,"Smoothie in 30 Sekunden;passt in jede Tasche;lädt per USB-C;Becher ist spülmaschinenfest",https://picsum.photos/id/1080/1200/1200 | https://picsum.photos/id/225/1200/1200,ja,Beispiel – ersetze durch echte Produkte
+led-spiegel,LED Schminkspiegel mit Touch,19.90,12,5400,3,Beauty,"drei Lichtfarben;dimmbar per Touch;kabellos aufladbar",https://picsum.photos/id/64/1200/1200,ja,Beispiel
+handyhalter-auto,Magnetischer Handyhalter fürs Auto,12.49,18,9800,4,Auto,"hält jedes Handy bombenfest;einhändig bedienbar;360 Grad drehbar",https://picsum.photos/id/1071/1200/1200 | https://picsum.photos/id/133/1200/1200,ja,Beispiel
+fusselrasierer,Elektrischer Fusselrasierer,6.99,10,15000,5,Haushalt,"Pullover sehen wieder aus wie neu;Akku hält wochenlang",https://picsum.photos/id/1062/1200/1200,ja,Beispiel – sehr billig
+massage-pistole,Mini Massagepistole,49.99,10,1200,3,Fitness,"vier Aufsätze;leise;passt in die Sporttasche",https://picsum.photos/id/1084/1200/1200,nein,Beispiel – deaktiviert

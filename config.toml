@@ -1,0 +1,69 @@
+# ============================================================
+#  TikTok Affiliate Tool – Einstellungen
+#  Alles hier kannst du ändern, ohne Code anzufassen.
+# ============================================================
+
+[allgemein]
+# Wie viele Videos pro Tag erstellt werden (TikTok-Inbox erlaubt max. 5 offene Uploads / 24 h)
+videos_pro_tag = 3
+
+# false = Follower-Aufbau (noch kein Affiliate-Zugang, keine "Link im Video"-Hinweise, kein #Werbung)
+# true  = Affiliate aktiv (Call-to-Action auf den Warenkorb + Werbekennzeichnung)
+affiliate_aktiv = false
+
+# Produktliste: entweder eine lokale CSV-Datei ODER ein veröffentlichter Google-Sheet-Link (CSV).
+# Wenn produkte_url gesetzt ist, wird sie bevorzugt.
+produkte_datei = "products.csv"
+produkte_url = ""
+
+# Ein Produkt bekommt frühestens nach so vielen Tagen ein neues Video (mit anderem Aufhänger)
+wiederholung_nach_tagen = 4
+# Maximal so viele Videos pro Produkt insgesamt
+max_videos_pro_produkt = 4
+
+# Uhrzeiten, die im Telegram-Hinweis als Postzeit vorgeschlagen werden (Österreich-Zeit)
+postzeiten = ["12:30", "18:00", "20:30"]
+
+[produktbewertung]
+# Preisbereich, in dem Spontankäufe am besten laufen (volle Punktzahl)
+preis_ideal_min = 10.0
+preis_ideal_max = 35.0
+# Abzug für Produkte außerhalb des Bereichs (0.6 = 40 % weniger Punkte)
+faktor_zu_billig = 0.6
+faktor_zu_teuer = 0.75
+
+[skript]
+# Claude-API für die Texte. Ohne ANTHROPIC_API_KEY nutzt das Tool eingebaute Vorlagen.
+modell = "claude-haiku-5-5"
+sprache = "Deutsch (locker, du-Form, für Österreich/Deutschland verständlich)"
+# Ziel-Länge des Voiceovers in Sekunden
+dauer_sekunden = 22
+basis_hashtags = ["#tiktokmademebuyit", "#fürdich", "#fyp", "#gadgets"]
+
+[stimme]
+# Kostenlose Microsoft-Stimmen (edge-tts). Weitere: de-DE-KatjaNeural, de-DE-AmalaNeural,
+# de-AT-JonasNeural, de-AT-IngridNeural, de-DE-KillianNeural
+stimme = "de-DE-ConradNeural"
+tempo = "+12%"          # etwas schneller wirkt auf TikTok natürlicher
+
+[video]
+breite = 1080
+hoehe = 1920
+fps = 30
+schrift = "DejaVu Sans"   # muss auf dem System installiert sein
+markierung_farbe = "&H0000E5FF&"   # ASS-Farbe (BGR): aktuelles Wort in Gelb
+# Optionale Hintergrundmusik: lege lizenzfreie .mp3-Dateien in assets/music/
+musik_lautstaerke = 0.12
+
+[versand]
+# Die Videos landen IMMER in der ShopClips-App. Zusätzlich möglich:
+# "app"              = nur App (wenn Telegram eingerichtet ist, kommt eine kurze Push-Nachricht "neue Videos")
+# "telegram"         = App + das ganze Video mit Caption zusätzlich per Telegram
+# "tiktok_inbox"     = App + Video direkt in deinen TikTok-Posteingang (braucht eigene TikTok-Developer-App)
+# "beides"           = App + TikTok-Posteingang + Caption per Telegram
+# "keiner"           = nur Dateien erstellen (zum Testen)
+modus = "app"
+
+[app]
+# So viele Tage bleiben fertige Videos in der App abrufbar
+videos_behalten_tage = 4
