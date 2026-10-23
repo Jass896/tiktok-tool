@@ -1,0 +1,2 @@
+Pro Produkt ein Ordner mit der id aus der Produktliste, z. B. assets/products/mini-mixer/1.jpg
+Eigene Fotos/Screenshots funktionieren oft besser als Shop-Bilder.

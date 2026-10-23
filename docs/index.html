@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ShopClips</title>
+<meta name="theme-color" content="#0E7C6B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: App-Shell – Kopfzeile oben, Inhalt als Karten-Stapel, Tab-Leiste unten (Daumen-Zone) */
+:root {
+  --bg: #F2F4F6; --surface: #FFFFFF; --sunk: #E8EBEF; --ink: #14171C; --muted: #5E6573; --line: #DEE2E8;
+  --accent: #0E7C6B; --accent-ink: #FFFFFF; --accent-soft: #D9F0EB;
+  --hot: #D9480F; --hot-soft: #FDE9DE; --ok: #1E7D45; --ok-soft: #DDF3E5; --warn: #9A6400; --warn-soft: #FBF0D5;
+  --bad: #B42318; --bad-soft: #FDE4E1; --shadow: 0 1px 2px rgba(20,23,28,.06), 0 4px 16px rgba(20,23,28,.06);
+  --f-display: "Bricolage Grotesque", "Segoe UI", Roboto, system-ui, sans-serif;
+  --f-body: "Figtree", "Segoe UI", Roboto, system-ui, sans-serif;
+  --r: 14px; --tabbar: 64px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0E1014; --surface: #171A20; --sunk: #1F232A; --ink: #ECEEF2; --muted: #9AA1AD; --line: #2A2F38;
+    --accent: #2CB59D; --accent-ink: #06231E; --accent-soft: #123A33;
+    --hot: #FF8A4C; --hot-soft: #3A2116; --ok: #4CC47E; --ok-soft: #13301F; --warn: #E7B44A; --warn-soft: #33270F;
+    --bad: #FF7B6E; --bad-soft: #3A1A17; --shadow: 0 1px 2px rgba(0,0,0,.4);
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body { font: 15px/1.45 var(--f-body); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+button, input, select, textarea { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Kopf */
+header.top {
+  position: sticky; top: 0; z-index: 20; background: var(--bg);
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+  display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--line);
+}
+.brand { font-family: var(--f-display); font-weight: 800; font-size: 22px; letter-spacing: -.02em; }
+.brand b { color: var(--accent); }
+.top .spacer { flex: 1; }
+.status-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: var(--sunk); color: var(--muted); }
+.status-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.status-chip.run { background: var(--warn-soft); color: var(--warn); }
+.status-chip.run .dot { animation: pulse 1.2s infinite; }
+.status-chip.ok { background: var(--ok-soft); color: var(--ok); }
+.status-chip.bad { background: var(--bad-soft); color: var(--bad); }
+@keyframes pulse { 50% { opacity: .3; } }
+
+main { padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(var(--tabbar) + env(safe-area-inset-bottom, 0px) + 24px) max(16px, env(safe-area-inset-left, 0px)); max-width: 720px; margin: 0 auto; display: grid; gap: 14px; }
+.view { display: grid; gap: 14px; }
+
+/* Tabs */
+nav.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--surface); border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+}
+nav.tabs button { border: 0; background: none; padding: 6px 4px; border-radius: 12px; display: grid; justify-items: center; gap: 2px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; }
+nav.tabs button svg { width: 24px; height: 24px; }
+nav.tabs button[aria-current="page"] { color: var(--accent); }
+nav.tabs button[aria-current="page"] svg { background: var(--accent-soft); border-radius: 10px; padding: 2px 10px; width: 44px; }
+
+/* Karten & Bausteine */
+.card { background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 8px 2px -4px; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row .grow { flex: 1; min-width: 0; }
+
+.btn { border: 0; border-radius: 12px; padding: 12px 16px; font-weight: 700; cursor: pointer; background: var(--sunk); color: var(--ink); display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; text-decoration: none; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; border: 1px solid var(--line); }
+.btn.danger { background: var(--bad-soft); color: var(--bad); }
+.btn.sm { min-height: 38px; padding: 8px 12px; font-size: 14px; border-radius: 10px; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: var(--sunk); color: var(--muted); white-space: nowrap; }
+.chip.hot { background: var(--hot-soft); color: var(--hot); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.acc { background: var(--accent-soft); color: var(--accent); }
+
+/* Lauf-Karte */
+.hero { background: var(--accent); color: var(--accent-ink); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; }
+.hero h2 { font-size: 24px; font-weight: 800; }
+.hero p { margin: 0; opacity: .88; }
+.stepper { display: inline-flex; align-items: center; background: rgba(255,255,255,.18); border-radius: 12px; }
+@media (prefers-color-scheme: dark) { .stepper { background: rgba(0,0,0,.18); } }
+.stepper button { border: 0; background: none; width: 44px; height: 46px; font-size: 22px; font-weight: 700; color: inherit; cursor: pointer; }
+.stepper output { min-width: 28px; text-align: center; font-weight: 800; font-size: 18px; font-family: var(--f-display); }
+.hero .btn.go { background: var(--accent-ink); color: var(--accent); flex: 1; }
+.runs { display: grid; gap: 6px; font-size: 13.5px; }
+.runs a { color: inherit; }
+
+/* Video-Karten */
+.video-card { display: grid; gap: 12px; }
+.video-head { display: flex; gap: 12px; align-items: flex-start; }
+.video-head .meta { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.video-head h3 { font-size: 17px; font-weight: 700; }
+.hook { font-weight: 600; }
+.poster { width: 64px; aspect-ratio: 9/16; border-radius: 10px; background: var(--sunk); display: grid; place-items: center; color: var(--muted); flex: none; border: 0; cursor: pointer; }
+.poster svg { width: 26px; height: 26px; }
+video { width: 100%; max-width: 360px; aspect-ratio: 9/16; border-radius: 12px; background: #000; justify-self: center; }
+.caption-box { background: var(--sunk); border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; font-size: 14px; overflow-wrap: anywhere; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.actions .wide { grid-column: 1 / -1; }
+.todo { margin: 0; padding-left: 20px; font-size: 13.5px; color: var(--muted); display: grid; gap: 2px; }
+.posted { opacity: .62; }
+.check { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; cursor: pointer; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+
+/* Produktliste */
+.plist { display: grid; gap: 10px; }
+.pitem { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; text-align: left; border: 0; width: 100%; cursor: pointer; background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); padding: 14px; color: inherit; }
+.rank { font-family: var(--f-display); font-weight: 800; font-size: 22px; color: var(--muted); text-align: center; }
+.pitem.next .rank { color: var(--accent); }
+.pitem .meta { min-width: 0; display: grid; gap: 6px; }
+.pitem .name { font-weight: 700; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pitem .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.score { text-align: right; display: grid; gap: 4px; justify-items: end; }
+.score strong { font-family: var(--f-display); font-size: 20px; font-weight: 800; }
+.bar { width: 56px; height: 6px; border-radius: 3px; background: var(--sunk); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--hot); border-radius: 3px; }
+.pitem.off { opacity: .55; }
+
+/* Formulare */
+label.field { display: grid; gap: 6px; font-weight: 600; font-size: 14px; }
+label.field .hint { font-weight: 400; color: var(--muted); font-size: 12.5px; }
+input[type=text], input[type=number], input[type=password], input[type=url], select, textarea {
+  width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 11px 12px; min-height: 46px;
+}
+textarea { min-height: 96px; resize: vertical; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 380px) { .grid2 { grid-template-columns: 1fr; } }
+.seg { display: grid; grid-template-columns: repeat(5, 1fr); background: var(--sunk); border-radius: 10px; padding: 3px; gap: 3px; }
+.seg button { border: 0; background: none; border-radius: 8px; min-height: 40px; font-weight: 700; cursor: pointer; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--hot); box-shadow: var(--shadow); }
+.switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.switch input { appearance: none; width: 50px; height: 30px; border-radius: 15px; background: var(--line); position: relative; cursor: pointer; flex: none; transition: background .15s; }
+.switch input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.switch input:checked { background: var(--accent); }
+.switch input:checked::after { transform: translateX(20px); }
+.photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+.photo { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--sunk); }
+.photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo button { position: absolute; top: 4px; right: 4px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 18px; line-height: 1; cursor: pointer; }
+.photo.pending::after { content: "neu"; position: absolute; left: 4px; bottom: 4px; font-size: 11px; font-weight: 700; background: var(--accent); color: var(--accent-ink); padding: 1px 6px; border-radius: 6px; }
+.add-photo { aspect-ratio: 1; border-radius: 10px; border: 2px dashed var(--line); display: grid; place-items: center; text-align: center; color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 6px; }
+.add-photo input { display: none; }
+.calc { background: var(--hot-soft); color: var(--hot); border-radius: 10px; padding: 10px 12px; font-weight: 700; }
+
+/* Blatt (Editor) */
+.sheet-back { position: fixed; inset: 0; background: rgba(10,12,16,.5); z-index: 40; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; top: calc(env(safe-area-inset-top, 0px) + 24px); z-index: 41; background: var(--bg); border-radius: 18px 18px 0 0; display: flex; flex-direction: column; max-width: 720px; margin: 0 auto; }
+.sheet-head { display: flex; align-items: center; gap: 10px; padding: 14px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--line); }
+.sheet-head h2 { flex: 1; font-size: 19px; }
+.sheet-body { overflow-y: auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 14px; }
+.icon-btn { border: 0; background: var(--sunk); width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--ink); }
+.icon-btn svg { width: 20px; height: 20px; }
+
+/* Dialog & Toast */
+.dialog { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(10,12,16,.5); padding: 24px; }
+.dialog .card { max-width: 380px; width: 100%; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--tabbar) + env(safe-area-inset-bottom, 0px) + 14px); z-index: 70; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 14px; max-width: calc(100% - 32px); box-shadow: var(--shadow); }
+
+.empty { text-align: center; padding: 28px 16px; display: grid; gap: 8px; justify-items: center; }
+.empty svg { width: 44px; height: 44px; color: var(--muted); }
+.notice { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+.notice.bad { background: var(--bad-soft); color: var(--bad); }
+.setup-steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
+.setup-steps a { color: var(--accent); }
+code { font-size: 13px; background: var(--sunk); padding: 1px 5px; border-radius: 5px; }
+.loading { display: grid; place-items: center; padding: 40px; color: var(--muted); }
+.spinner { width: 28px; height: 28px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { *, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">Shop<b>Clips</b></div>
+  <div class="spacer"></div>
+  <span class="status-chip" id="runChip" hidden><span class="dot"></span><span id="runChipText"></span></span>
+</header>
+
+<main id="app"><div class="loading"><div class="spinner"></div></div></main>
+
+<nav class="tabs" id="tabs" hidden>
+  <button data-tab="heute" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>Videos</button>
+  <button data-tab="produkte">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Produkte</button>
+  <button data-tab="einstellungen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Einstellungen</button>
+</nav>
+
+<div id="layer"></div>
+
+<script>
+"use strict";
+/* ================================================================
+   ShopClips – Steuer-App für das TikTok Affiliate Tool
+   Spricht direkt mit der GitHub-API. Der Token bleibt nur auf diesem Gerät.
+   ================================================================ */
+
+const LS = {
+  get(k, d = null) { try { const v = localStorage.getItem("sc_" + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("sc_" + k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem("sc_" + k); } catch {} },
+};
+
+const COLS = ["id", "name", "preis_eur", "provision_prozent", "verkauft", "trend", "kategorie", "vorteile", "bilder", "aktiv", "notiz"];
+const VOICES = [
+  ["de-DE-ConradNeural", "Conrad (männlich, DE)"], ["de-DE-KillianNeural", "Killian (männlich, DE)"],
+  ["de-AT-JonasNeural", "Jonas (männlich, AT)"], ["de-DE-KatjaNeural", "Katja (weiblich, DE)"],
+  ["de-DE-AmalaNeural", "Amala (weiblich, DE)"], ["de-AT-IngridNeural", "Ingrid (weiblich, AT)"],
+];
+const ICON = {
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+  share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v14"/></svg>',
+  save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  film: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4"/></svg>',
+  bag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>',
+};
+
+const S = {
+  conn: LS.get("conn"),          // {owner, repo, token, branch}
+  tab: LS.get("tab", "heute"),
+  products: [], header: COLS.slice(), productsSha: null,
+  configText: "", configSha: null, cfg: {},
+  history: [], videos: [], runs: [],
+  blobs: new Map(), loaded: false, count: 1, pollTimer: null,
+};
+
+/* ---------------------------------------------------------------- Helfer */
+const $ = (sel, root = document) => root.querySelector(sel);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const eur = (n) => (Number(n) || 0).toLocaleString("de-AT", { style: "currency", currency: "EUR" });
+const fmtInt = (n) => (Number(n) || 0).toLocaleString("de-AT");
+const num = (v, d = 0) => { v = String(v ?? "").replace(/[€%\s]/g, ""); if (!v) return d; if (v.includes(",") && v.includes(".")) v = v.replace(/\./g, "").replace(",", "."); else v = v.replace(",", "."); const n = parseFloat(v); return isNaN(n) ? d : n; };
+const slug = (t) => (t.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "produkt");
+
+function toast(msg, ms = 2600) {
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; t.setAttribute("role", "status");
+  document.body.appendChild(t); setTimeout(() => t.remove(), ms);
+}
+function ask(title, text, okLabel = "Ja", danger = false) {
+  return new Promise((resolve) => {
+    const d = document.createElement("div"); d.className = "dialog";
+    d.innerHTML = `<div class="card" role="dialog" aria-modal="true"><h3>${esc(title)}</h3><div class="muted">${esc(text)}</div>
+      <div class="row"><button class="btn ghost grow" data-a="0">Abbrechen</button><button class="btn ${danger ? "danger" : "primary"} grow" data-a="1">${esc(okLabel)}</button></div></div>`;
+    d.addEventListener("click", (e) => { const a = e.target.closest("[data-a]"); if (a || e.target === d) { d.remove(); resolve(a?.dataset.a === "1"); } });
+    document.body.appendChild(d); $("[data-a='1']", d).focus();
+  });
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); toast("Caption kopiert"); return true; }
+  catch { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast("Caption kopiert"); } catch { toast("Kopieren nicht möglich – Text gedrückt halten"); } ta.remove(); return false; }
+}
+const b64encode = (str) => { const bytes = new TextEncoder().encode(str); let bin = ""; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(bin); };
+const b64decode = (b64) => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\n/g, "")), (c) => c.charCodeAt(0)));
+
+/* ---------------------------------------------------------------- GitHub-API */
+class ApiError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
+
+async function gh(path, { method = "GET", body, accept = "application/vnd.github+json", raw = false } = {}) {
+  const c = S.conn;
+  const res = await fetch("https://api.github.com" + path.replace("{repo}", `${c.owner}/${c.repo}`), {
+    method, cache: "no-store",
+    headers: { Authorization: `Bearer ${c.token}`, Accept: accept, "X-GitHub-Api-Version": "2022-11-28", ...(body ? { "Content-Type": "application/json" } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    let msg = res.statusText;
+    try { msg = (await res.json()).message || msg; } catch {}
+    throw new ApiError(res.status, msg);
+  }
+  if (raw) return res;
+  return res.status === 204 ? null : res.json();
+}
+const enc = (p) => p.split("/").map(encodeURIComponent).join("/");
+
+async function getText(path, ref) {
+  try {
+    const j = await gh(`/repos/{repo}/contents/${enc(path)}${ref ? `?ref=${encodeURIComponent(ref)}` : ""}`);
+    if (j.content) return { text: b64decode(j.content), sha: j.sha };
+    const r = await gh(`/repos/{repo}/contents/${enc(path)}${ref ? `?ref=${encodeURIComponent(ref)}` : ""}`, { accept: "application/vnd.github.raw+json", raw: true });
+    return { text: await r.text(), sha: j.sha };
+  } catch (e) { if (e.status === 404) return { text: null, sha: null }; throw e; }
+}
+async function getBlob(path, ref) {
+  const r = await gh(`/repos/{repo}/contents/${enc(path)}${ref ? `?ref=${encodeURIComponent(ref)}` : ""}`, { accept: "application/vnd.github.raw+json", raw: true });
+  return r.blob();
+}
+async function putFile(path, contentB64, sha, message) {
+  const body = { message, content: contentB64, branch: S.conn.branch };
+  if (sha) body.sha = sha;
+  const j = await gh(`/repos/{repo}/contents/${enc(path)}`, { method: "PUT", body });
+  return j.content.sha;
+}
+async function deleteFile(path, sha, message) {
+  await gh(`/repos/{repo}/contents/${enc(path)}`, { method: "DELETE", body: { message, sha, branch: S.conn.branch } });
+}
+async function listDir(path) {
+  try { const j = await gh(`/repos/{repo}/contents/${enc(path)}?ref=${encodeURIComponent(S.conn.branch)}`); return Array.isArray(j) ? j : []; }
+  catch (e) { if (e.status === 404) return []; throw e; }
+}
+
+/* ---------------------------------------------------------------- CSV */
+function parseCSV(text) {
+  const rows = []; let row = [], cur = "", q = false;
+  text = text.replace(/^﻿/, "");
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+      else cur += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === ",") { row.push(cur); cur = ""; }
+    else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; }
+    else cur += ch;
+  }
+  if (cur !== "" || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter((r) => r.some((c) => c.trim() !== ""));
+}
+const csvCell = (v) => { v = String(v ?? ""); return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
+
+function productsFromCSV(text) {
+  const rows = parseCSV(text);
+  if (!rows.length) return { header: COLS.slice(), items: [] };
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  for (const c of COLS) if (!header.includes(c)) header.push(c);
+  const items = rows.slice(1).map((r) => { const o = {}; header.forEach((h, i) => (o[h] = (r[i] ?? "").trim())); return o; }).filter((o) => o.name);
+  items.forEach((o, i) => { if (!o.id) o.id = slug(o.name); o._i = i; });
+  return { header, items };
+}
+const productsToCSV = () => [S.header.join(","), ...S.products.map((p) => S.header.map((h) => csvCell(p[h])).join(","))].join("\n") + "\n";
+
+/* ---------------------------------------------------------------- Konfiguration (config.toml) */
+function readCfg(text) {
+  const val = (key) => { const m = text.match(new RegExp(`^${key}\\s*=\\s*(.+?)\\s*(#.*)?$`, "m")); return m ? m[1].trim() : null; };
+  const str = (key, d) => { const v = val(key); return v ? v.replace(/^"|"$/g, "") : d; };
+  const n = (key, d) => { const v = val(key); return v === null ? d : parseFloat(v); };
+  const arr = (key) => { const v = val(key); return v ? [...v.matchAll(/"([^"]*)"/g)].map((m) => m[1]) : []; };
+  return {
+    videos_pro_tag: n("videos_pro_tag", 3), affiliate_aktiv: val("affiliate_aktiv") === "true",
+    wiederholung_nach_tagen: n("wiederholung_nach_tagen", 4), max_videos_pro_produkt: n("max_videos_pro_produkt", 4),
+    postzeiten: arr("postzeiten"), preis_ideal_min: n("preis_ideal_min", 10), preis_ideal_max: n("preis_ideal_max", 35),
+    faktor_zu_billig: n("faktor_zu_billig", 0.6), faktor_zu_teuer: n("faktor_zu_teuer", 0.75),
+    stimme: str("stimme", "de-DE-ConradNeural"), modus: str("modus", "app"),
+  };
+}
+function setCfg(text, key, rawValue) {
+  const re = new RegExp(`^(${key}\\s*=\\s*)(.+?)(\\s*#.*)?$`, "m");
+  return re.test(text) ? text.replace(re, (_, a, _b, c) => a + rawValue + (c || "")) : text;
+}
+
+/* ---------------------------------------------------------------- Bewertung (gleich wie im Python-Tool) */
+function scoreAll() {
+  const c = S.cfg, now = Date.now(), cooldown = c.wiederholung_nach_tagen * 864e5;
+  for (const p of S.products) {
+    const posts = S.history.filter((h) => h.product_id === p.id);
+    const last = posts.length ? Math.max(...posts.map((h) => Date.parse(h.created))) : null;
+    const price = num(p.preis_eur), comm = num(p.provision_prozent), sold = num(p.verkauft), trend = Math.min(5, Math.max(1, num(p.trend, 3)));
+    const earning = price * comm / 100, demand = Math.log10(Math.max(sold, 0) + 10), trendF = 0.6 + 0.2 * trend;
+    const priceFit = price < c.preis_ideal_min ? c.faktor_zu_billig : price > c.preis_ideal_max ? c.faktor_zu_teuer : 1;
+    let fresh = 1 / (1 + 0.35 * posts.length), state = "bereit";
+    if (posts.length >= c.max_videos_pro_produkt) { fresh = 0; state = "limit"; }
+    else if (last && now - last < cooldown) { fresh = 0; state = "pause"; p._wieder = new Date(last + cooldown); }
+    const active = !["nein", "no", "0", "false", "x"].includes(String(p.aktiv || "ja").toLowerCase());
+    if (!active) { fresh = 0; state = "inaktiv"; }
+    if (price <= 0) { fresh = 0; state = "unvollständig"; }
+    p._score = earning * demand * trendF * priceFit * fresh;
+    p._earning = earning; p._videos = posts.length; p._state = state; p._active = active;
+  }
+  S.products.sort((a, b) => b._score - a._score || a.name.localeCompare(b.name));
+}
+
+/* ---------------------------------------------------------------- Daten laden */
+async function loadAll() {
+  const [prod, conf, hist, vids] = await Promise.all([
+    getText("products.csv", S.conn.branch), getText("config.toml", S.conn.branch),
+    getText("data/history.json", S.conn.branch), getText("index.json", "videos").catch(() => ({ text: null })),
+  ]);
+  if (prod.text === null || conf.text === null) throw new Error("Im Repository fehlen products.csv oder config.toml. Ist das richtige Repository verbunden?");
+  const parsed = productsFromCSV(prod.text);
+  S.products = parsed.items; S.header = parsed.header; S.productsSha = prod.sha;
+  S.configText = conf.text; S.configSha = conf.sha; S.cfg = readCfg(conf.text);
+  try { S.history = hist.text ? JSON.parse(hist.text) : []; } catch { S.history = []; }
+  try { S.videos = vids.text ? JSON.parse(vids.text) : []; } catch { S.videos = []; }
+  scoreAll();
+  S.loaded = true;
+}
+async function loadRuns() {
+  try {
+    const j = await gh(`/repos/{repo}/actions/workflows/daily.yml/runs?per_page=4`);
+    S.runs = j.workflow_runs || [];
+  } catch { S.runs = []; }
+  renderRunChip();
+  const busy = S.runs.some((r) => r.status !== "completed");
+  clearTimeout(S.pollTimer);
+  if (busy) S.pollTimer = setTimeout(async () => {
+    const wasBusy = busy; await loadRuns();
+    if (wasBusy && !S.runs.some((r) => r.status !== "completed")) {
+      const vids = await getText("index.json", "videos").catch(() => ({ text: null }));
+      try { S.videos = vids.text ? JSON.parse(vids.text) : S.videos; } catch {}
+      const hist = await getText("data/history.json", S.conn.branch).catch(() => ({ text: null }));
+      try { if (hist.text) S.history = JSON.parse(hist.text); } catch {}
+      scoreAll();
+      toast(S.runs[0]?.conclusion === "success" ? "Neue Videos sind da" : "Lauf beendet – mit Fehler");
+    }
+    if (S.tab === "heute") render();
+  }, 15000);
+}
+function runLabel(r) {
+  if (!r) return null;
+  if (r.status !== "completed") return { cls: "run", text: r.status === "queued" ? "Wartet …" : "Erstellt Videos …" };
+  return r.conclusion === "success" ? { cls: "ok", text: "Bereit" } : { cls: "bad", text: "Fehler beim letzten Lauf" };
+}
+function renderRunChip() {
+  const chip = $("#runChip"), l = runLabel(S.runs[0]);
+  chip.hidden = !l; if (!l) return;
+  chip.className = "status-chip " + l.cls; $("#runChipText").textContent = l.text;
+}
+
+/* ---------------------------------------------------------------- Ansichten */
+function render() {
+  const app = $("#app");
+  if (!S.conn) { $("#tabs").hidden = true; app.innerHTML = viewSetup(); bindSetup(); return; }
+  $("#tabs").hidden = false;
+  document.querySelectorAll("#tabs button").forEach((b) => b.setAttribute("aria-current", b.dataset.tab === S.tab ? "page" : "false"));
+  if (!S.loaded) { app.innerHTML = `<div class="loading"><div class="spinner"></div></div>`; return; }
+  if (S.tab === "heute") { app.innerHTML = viewToday(); bindToday(); }
+  else if (S.tab === "produkte") { app.innerHTML = viewProducts(); bindProducts(); }
+  else { app.innerHTML = viewSettings(); bindSettings(); }
+}
+
+/* ---------- Einrichtung */
+function viewSetup(err = "") {
+  const c = LS.get("conn_draft", {});
+  return `<div class="view">
+    <div class="card">
+      <h2 style="font-size:24px">Verbinden</h2>
+      <div class="muted">ShopClips steuert dein Video-Tool auf GitHub. Einmal einrichten, danach bleibt alles auf diesem Handy gespeichert.</div>
+      <ol class="setup-steps">
+        <li>Auf GitHub: <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</b>.</li>
+        <li>Bei „Repository access“ nur dein Video-Repository auswählen.</li>
+        <li>Rechte: <b>Contents</b> = Read and write, <b>Actions</b> = Read and write.</li>
+        <li>Token kopieren und unten einfügen.</li>
+      </ol>
+    </div>
+    ${err ? `<div class="notice bad">${esc(err)}</div>` : ""}
+    <form class="card" id="setupForm" autocomplete="off">
+      <label class="field">GitHub-Benutzername<input id="owner" type="text" required value="${esc(c.owner || "")}" autocapitalize="off" spellcheck="false"></label>
+      <label class="field">Repository-Name<input id="repo" type="text" required value="${esc(c.repo || "tiktok-tool")}" autocapitalize="off" spellcheck="false"></label>
+      <label class="field">Token<span class="hint">Beginnt mit github_pat_ … Wird nur auf diesem Gerät gespeichert.</span><input id="token" type="password" required></label>
+      <button class="btn primary" type="submit" id="connectBtn">Verbinden</button>
+    </form></div>`;
+}
+function bindSetup() {
+  $("#setupForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const conn = { owner: $("#owner").value.trim(), repo: $("#repo").value.trim(), token: $("#token").value.trim() };
+    LS.set("conn_draft", { owner: conn.owner, repo: conn.repo });
+    const btn = $("#connectBtn"); btn.disabled = true; btn.textContent = "Prüfe …";
+    S.conn = conn;
+    try {
+      const repo = await gh(`/repos/{repo}`);
+      conn.branch = repo.default_branch;
+      if (repo.permissions && !repo.permissions.push) throw new Error("Der Token darf nicht schreiben. Bitte „Contents: Read and write“ geben.");
+      LS.set("conn", conn); S.loaded = false; render(); await start();
+    } catch (err) {
+      S.conn = null;
+      const msg = err.status === 401 ? "Token ungültig oder abgelaufen." : err.status === 404 ? "Repository nicht gefunden. Stimmen Name und Token-Zugriff?" : err.message;
+      $("#app").innerHTML = viewSetup(msg); bindSetup();
+    }
+  });
+}
+
+/* ---------- Videos */
+function dayLabel(d) {
+  const today = new Date(); const iso = (x) => x.toISOString().slice(0, 10);
+  const y = new Date(today); y.setDate(today.getDate() - 1);
+  if (d === iso(today)) return "Heute";
+  if (d === iso(y)) return "Gestern";
+  return new Date(d + "T12:00:00").toLocaleDateString("de-AT", { weekday: "long", day: "numeric", month: "long" });
+}
+function viewToday() {
+  const posted = LS.get("posted", {});
+  const r0 = S.runs[0], busy = r0 && r0.status !== "completed";
+  const next = S.products.filter((p) => p._score > 0).slice(0, S.count).map((p) => p.name);
+  let html = `<section class="hero">
+    <div><h2>Videos erstellen</h2><p>${busy ? "Läuft gerade – dauert 2 bis 5 Minuten." : `Automatisch jeden Morgen ${S.cfg.videos_pro_tag}× · oder jetzt sofort.`}</p></div>
+    <div class="row">
+      <div class="stepper" aria-label="Anzahl"><button id="minus" aria-label="weniger">−</button><output id="cnt" class="num">${S.count}</output><button id="plus" aria-label="mehr">+</button></div>
+      <button class="btn go" id="runBtn" ${busy || !next.length ? "disabled" : ""}>${busy ? "Läuft …" : "Jetzt erstellen"}</button>
+    </div>
+    ${next.length ? `<p class="small">Als Nächstes: ${next.map(esc).join(" · ")}</p>` : `<p class="small">Kein Produkt bereit – trag neue Produkte ein.</p>`}
+  </section>`;
+  if (r0 && r0.status === "completed" && r0.conclusion !== "success")
+    html += `<div class="notice bad">Der letzte Lauf ist fehlgeschlagen. <a href="${esc(r0.html_url)}" target="_blank" rel="noopener" style="color:inherit;font-weight:700">Fehler ansehen</a> – oder schick den Text an Claude.</div>`;
+
+  if (!S.videos.length) {
+    html += `<div class="card empty">${ICON.film}<h3>Noch keine Videos</h3><div class="muted">Sobald ein Lauf fertig ist, erscheinen die Videos hier – mit Caption zum Kopieren.</div></div>`;
+    return `<div class="view">${html}</div>`;
+  }
+  const byDay = {};
+  for (const v of S.videos) (byDay[v.date] ||= []).push(v);
+  for (const [day, list] of Object.entries(byDay).sort((a, b) => b[0].localeCompare(a[0]))) {
+    html += `<div class="section-title">${esc(dayLabel(day))} · ${list.length} Video${list.length > 1 ? "s" : ""}</div>`;
+    for (const v of list) {
+      const done = !!posted[v.path], loaded = S.blobs.has(v.path);
+      html += `<article class="card video-card ${done ? "posted" : ""}" data-path="${esc(v.path)}">
+        <div class="video-head">
+          <button class="poster" data-act="load" aria-label="Video ansehen" ${loaded ? "hidden" : ""}>${ICON.play}</button>
+          <div class="meta">
+            <h3>${esc(v.product)}</h3>
+            <div class="hook muted">„${esc(v.hook)}“</div>
+            <div class="row"><span class="chip acc">Posten ca. ${esc(v.post_time)}</span><span class="chip">${(v.size / 1e6).toFixed(1).replace(".", ",")} MB</span></div>
+          </div>
+        </div>
+        ${loaded ? `<video src="${S.blobs.get(v.path).url}" controls playsinline preload="metadata"></video>` : ""}
+        <div class="caption-box">${esc(v.caption)}</div>
+        <div class="actions">
+          <button class="btn primary wide" data-act="share">${ICON.share}An TikTok teilen</button>
+          <button class="btn sm" data-act="copy">${ICON.copy}Caption kopieren</button>
+          <button class="btn sm ghost" data-act="save">${ICON.save}Speichern</button>
+        </div>
+        <ol class="todo">
+          <li>„An TikTok teilen“ kopiert die Caption automatisch – in TikTok einfach einfügen</li>
+          ${v.affiliate ? `<li>In TikTok: Link hinzufügen → Produkte → „${esc(v.product)}“</li><li>Inhaltsoffenlegung (Werbung) einschalten</li>` : ""}
+          <li>Bei KI-Stimme: „KI-generiert“-Label setzen</li>
+        </ol>
+        <label class="check"><input type="checkbox" data-act="posted" ${done ? "checked" : ""}> Gepostet</label>
+      </article>`;
+    }
+  }
+  return `<div class="view">${html}</div>`;
+}
+async function loadVideo(path) {
+  if (S.blobs.has(path)) return S.blobs.get(path);
+  const blob = await getBlob(path, "videos");
+  const entry = { blob: new Blob([blob], { type: "video/mp4" }), url: "" };
+  entry.url = URL.createObjectURL(entry.blob);
+  S.blobs.set(path, entry);
+  return entry;
+}
+function bindToday() {
+  $("#minus")?.addEventListener("click", () => { S.count = Math.max(1, S.count - 1); render(); });
+  $("#plus")?.addEventListener("click", () => { S.count = Math.min(5, S.count + 1); render(); });
+  $("#runBtn")?.addEventListener("click", startRun);
+}
+// Einmalig registriert (Ereignis-Delegation), damit sich nichts doppelt
+$("#app").addEventListener("click", onVideoAction);
+$("#app").addEventListener("change", (e) => {
+  if (e.target.dataset.act !== "posted") return;
+  const path = e.target.closest("[data-path]").dataset.path, posted = LS.get("posted", {});
+  if (e.target.checked) posted[path] = Date.now(); else delete posted[path];
+  LS.set("posted", posted); e.target.closest("article").classList.toggle("posted", e.target.checked);
+});
+async function onVideoAction(e) {
+  const btn = e.target.closest("button[data-act]"); if (!btn) return;
+  const card = btn.closest("[data-path]"); if (!card) return;
+  const v = S.videos.find((x) => x.path === card.dataset.path); if (!v) return;
+  const act = btn.dataset.act;
+  if (act === "copy") return copyText(v.caption);
+  const label = btn.innerHTML; btn.disabled = true;
+  if (!S.blobs.has(v.path)) btn.innerHTML = `<span class="spinner" style="width:18px;height:18px;border-width:2px"></span>Lädt …`;
+  try {
+    const entry = await loadVideo(v.path);
+    if (act === "load") { render(); return; }
+    if (act === "save") {
+      const a = document.createElement("a"); a.href = entry.url; a.download = v.file; document.body.appendChild(a); a.click(); a.remove();
+      toast("Video wird gespeichert");
+    }
+    if (act === "share") {
+      const file = new File([entry.blob], v.file, { type: "video/mp4" });
+      try { await navigator.clipboard.writeText(v.caption); } catch {}
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], text: v.caption }); }
+        catch (err) { if (err.name !== "AbortError") toast("Teilen fehlgeschlagen – nutze „Speichern“"); }
+      } else toast("Dein Browser kann keine Videos teilen – nutze „Speichern“", 3600);
+    }
+  } catch (err) { toast(err.status === 404 ? "Video nicht mehr vorhanden" : "Laden fehlgeschlagen: " + err.message, 3600); }
+  finally { btn.disabled = false; btn.innerHTML = label; }
+}
+async function startRun() {
+  const btn = $("#runBtn"); btn.disabled = true; btn.textContent = "Startet …";
+  try {
+    await gh(`/repos/{repo}/actions/workflows/daily.yml/dispatches`, { method: "POST", body: { ref: S.conn.branch, inputs: { count: String(S.count) } } });
+    toast(`Gestartet – ${S.count} Video${S.count > 1 ? "s" : ""} in ein paar Minuten`);
+    setTimeout(loadRuns, 4000); setTimeout(() => { if (S.tab === "heute") render(); }, 4500);
+  } catch (err) {
+    toast(err.status === 403 ? "Token braucht „Actions: Read and write“" : err.status === 404 ? "Workflow daily.yml nicht gefunden" : "Start fehlgeschlagen: " + err.message, 4000);
+    btn.disabled = false; btn.textContent = "Jetzt erstellen";
+  }
+}
+
+/* ---------- Produkte */
+function stateChip(p, i, nextIds) {
+  if (nextIds.has(p.id)) return `<span class="chip ok">Als Nächstes</span>`;
+  if (p._state === "pause") return `<span class="chip warn">Pause bis ${p._wieder.toLocaleDateString("de-AT", { day: "numeric", month: "numeric" })}</span>`;
+  if (p._state === "limit") return `<span class="chip">Limit erreicht</span>`;
+  if (p._state === "inaktiv") return `<span class="chip">Inaktiv</span>`;
+  if (p._state === "unvollständig") return `<span class="chip warn">Preis fehlt</span>`;
+  return "";
+}
+function viewProducts() {
+  const max = Math.max(1e-9, ...S.products.map((p) => p._score));
+  const nextIds = new Set(S.products.filter((p) => p._score > 0).slice(0, S.cfg.videos_pro_tag).map((p) => p.id));
+  const ready = S.products.filter((p) => p._score > 0).length;
+  let html = `<div class="row"><div class="grow"><h2 style="font-size:24px">Produkte</h2><div class="muted small">${S.products.length} gesamt · ${ready} bereit · sortiert nach erwarteter Provision</div></div>
+    <button class="btn primary" id="addBtn">+ Produkt</button></div>`;
+  if (ready < S.cfg.videos_pro_tag)
+    html += `<div class="notice">Nur ${ready} Produkt${ready === 1 ? "" : "e"} bereit, aber ${S.cfg.videos_pro_tag} Videos pro Tag eingestellt. Trag neue Produkte aus dem Affiliate-Marktplatz ein.</div>`;
+  if (!S.products.length)
+    html += `<div class="card empty">${ICON.bag}<h3>Noch keine Produkte</h3><div class="muted">Tipp auf „+ Produkt“ und übernimm Preis, Provision und Verkaufszahl aus dem Affiliate-Marktplatz.</div></div>`;
+  html += `<div class="plist">` + S.products.map((p, i) => `
+    <button class="pitem ${nextIds.has(p.id) ? "next" : ""} ${p._score > 0 ? "" : "off"}" data-id="${esc(p.id)}">
+      <div class="rank num">${p._score > 0 ? i + 1 : "–"}</div>
+      <div class="meta">
+        <div class="name">${esc(p.name)}</div>
+        <div class="chips">${stateChip(p, i, nextIds)}<span class="chip num">${eur(num(p.preis_eur))}</span><span class="chip num">${num(p.provision_prozent)} %</span><span class="chip num">${fmtInt(num(p.verkauft))} verk.</span>${p._videos ? `<span class="chip num">${p._videos} Video${p._videos > 1 ? "s" : ""}</span>` : ""}</div>
+      </div>
+      <div class="score"><strong class="num">${p._earning.toLocaleString("de-AT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<small style="font-size:13px"> €</small></strong><span class="muted small">pro Verkauf</span><div class="bar" aria-hidden="true"><i style="width:${Math.round((p._score / max) * 100)}%"></i></div></div>
+    </button>`).join("") + `</div>`;
+  return `<div class="view">${html}</div>`;
+}
+function bindProducts() {
+  $("#addBtn").addEventListener("click", () => openEditor(null));
+  document.querySelectorAll(".pitem").forEach((b) => b.addEventListener("click", () => openEditor(S.products.find((p) => p.id === b.dataset.id))));
+}
+
+/* ---------- Produkt-Editor */
+async function resizeImage(file, maxSide = 1440) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("Bild nicht lesbar")); i.src = url; });
+    const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * scale); c.height = Math.round(img.naturalHeight * scale);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.86);
+  } finally { URL.revokeObjectURL(url); }
+}
+
+function openEditor(p) {
+  const isNew = !p;
+  const d = p ? { ...p } : { id: "", name: "", preis_eur: "", provision_prozent: "", verkauft: "", trend: "3", kategorie: "", vorteile: "", bilder: "", aktiv: "ja", notiz: "" };
+  const st = { trend: Math.round(num(d.trend, 3)), photos: [], pending: [], removed: [] };
+  const layer = $("#layer");
+  layer.innerHTML = `<div class="sheet-back"></div>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="edTitle">
+    <div class="sheet-head"><h2 id="edTitle">${isNew ? "Neues Produkt" : "Produkt bearbeiten"}</h2><button class="icon-btn" id="edClose" aria-label="Schließen">${ICON.close}</button></div>
+    <form class="sheet-body" id="edForm" autocomplete="off">
+      <label class="field">Produktname<span class="hint">So wird es im Video genannt.</span><input id="f_name" type="text" required value="${esc(d.name)}"></label>
+      <div class="grid2">
+        <label class="field">Preis (€)<input id="f_price" type="text" inputmode="decimal" required value="${esc(d.preis_eur)}" placeholder="19,90"></label>
+        <label class="field">Provision (%)<input id="f_comm" type="text" inputmode="decimal" required value="${esc(d.provision_prozent)}" placeholder="12"></label>
+      </div>
+      <div class="calc num" id="calc"></div>
+      <div class="grid2">
+        <label class="field">Verkauft<span class="hint">laut Marktplatz</span><input id="f_sold" type="text" inputmode="numeric" value="${esc(d.verkauft)}" placeholder="5400"></label>
+        <label class="field">Kategorie<span class="hint">wird auch Hashtag</span><input id="f_cat" type="text" value="${esc(d.kategorie)}" placeholder="Küche"></label>
+      </div>
+      <div class="field" style="display:grid;gap:6px"><span style="font-weight:600;font-size:14px">Trend <span class="hint" style="font-weight:400;color:var(--muted)">– wie stark läuft so was gerade?</span></span>
+        <div class="seg" id="trendSeg" role="group" aria-label="Trend">${[1, 2, 3, 4, 5].map((n) => `<button type="button" data-v="${n}" aria-pressed="${n === st.trend}">${n}</button>`).join("")}</div></div>
+      <label class="field">Vorteile<span class="hint">Eine Zeile pro Vorteil. Nur echte Eigenschaften – daraus entsteht der Videotext.</span><textarea id="f_feat" placeholder="Smoothie in 30 Sekunden&#10;passt in jede Tasche">${esc((d.vorteile || "").split(";").map((s) => s.trim()).filter(Boolean).join("\n"))}</textarea></label>
+      <div class="field" style="display:grid;gap:8px"><span style="font-weight:600;font-size:14px">Fotos <span class="hint" style="font-weight:400;color:var(--muted)">– 2 bis 5 Stück, eigene Fotos wirken am echtesten</span></span>
+        <div class="photos" id="photos"><div class="loading" style="padding:12px"><div class="spinner"></div></div></div></div>
+      <label class="field">Bild-Links (optional)<span class="hint">Statt Fotos: ein Link pro Zeile.</span><textarea id="f_links" style="min-height:60px">${esc((d.bilder || "").split("|").map((s) => s.trim()).filter(Boolean).join("\n"))}</textarea></label>
+      <div class="card" style="padding:12px 14px"><label class="switch"><span><b>Aktiv</b><br><span class="muted small">Inaktive Produkte bekommen keine Videos.</span></span><input id="f_active" type="checkbox" ${!["nein", "no", "0", "false", "x"].includes(String(d.aktiv).toLowerCase()) ? "checked" : ""}></label></div>
+      <label class="field">Notiz (nur für dich)<input id="f_note" type="text" value="${esc(d.notiz)}"></label>
+      <button class="btn primary" type="submit" id="edSave">Speichern</button>
+      ${isNew ? "" : `<button class="btn danger" type="button" id="edDelete">Produkt löschen</button>`}
+    </form>
+  </section>`;
+  const close = () => { st.pending.forEach((x) => URL.revokeObjectURL(x.preview)); layer.innerHTML = ""; };
+  $("#edClose").addEventListener("click", close);
+  $(".sheet-back").addEventListener("click", close);
+
+  const updCalc = () => { const e = num($("#f_price").value) * num($("#f_comm").value) / 100; $("#calc").textContent = `≈ ${eur(e)} Provision pro Verkauf`; };
+  ["#f_price", "#f_comm"].forEach((s) => $(s).addEventListener("input", updCalc)); updCalc();
+  $("#trendSeg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; st.trend = +b.dataset.v; $("#trendSeg").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(+x.dataset.v === st.trend))); });
+
+  const drawPhotos = () => {
+    const box = $("#photos"); if (!box) return;
+    box.innerHTML = st.photos.filter((f) => !st.removed.includes(f.path)).map((f) => `<div class="photo"><img alt="" src="${f.preview || ""}" data-path="${esc(f.path)}"><button type="button" data-rm="${esc(f.path)}" aria-label="Foto entfernen">×</button></div>`).join("")
+      + st.pending.map((f, i) => `<div class="photo pending"><img alt="" src="${f.preview}"><button type="button" data-rmp="${i}" aria-label="Foto entfernen">×</button></div>`).join("")
+      + `<label class="add-photo"><input type="file" accept="image/*" multiple id="photoIn">+ Foto<br>aufnehmen oder wählen</label>`;
+    $("#photoIn").addEventListener("change", async (e) => {
+      for (const file of e.target.files) { try { const dataUrl = await resizeImage(file); st.pending.push({ dataUrl, preview: dataUrl }); } catch (err) { toast(err.message); } }
+      drawPhotos();
+    });
+  };
+  $("#photos").addEventListener("click", (e) => {
+    const rm = e.target.closest("[data-rm]"), rmp = e.target.closest("[data-rmp]");
+    if (rm) { st.removed.push(rm.dataset.rm); drawPhotos(); }
+    if (rmp) { st.pending.splice(+rmp.dataset.rmp, 1); drawPhotos(); }
+  });
+  (async () => {
+    if (!isNew) {
+      const files = (await listDir(`assets/products/${d.id}`)).filter((f) => /\.(jpe?g|png|webp)$/i.test(f.name));
+      st.photos = files.map((f) => ({ path: f.path, sha: f.sha }));
+      drawPhotos();
+      for (const f of st.photos) {
+        try { const b = await getBlob(f.path, S.conn.branch); f.preview = URL.createObjectURL(b); const img = document.querySelector(`#photos img[data-path="${CSS.escape(f.path)}"]`); if (img) img.src = f.preview; } catch {}
+      }
+    } else drawPhotos();
+  })();
+
+  $("#edForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = $("#edSave"); btn.disabled = true; btn.textContent = "Speichert …";
+    const name = $("#f_name").value.trim();
+    let id = d.id;
+    if (isNew) { id = slug(name); let n = 2; while (S.products.some((x) => x.id === id)) id = `${slug(name)}-${n++}`; }
+    const rec = {
+      ...d, id, name,
+      preis_eur: String(num($("#f_price").value)), provision_prozent: String(num($("#f_comm").value)),
+      verkauft: String(Math.round(num($("#f_sold").value))), trend: String(st.trend), kategorie: $("#f_cat").value.trim(),
+      vorteile: $("#f_feat").value.split("\n").map((s) => s.trim().replace(/;/g, ",")).filter(Boolean).join(";"),
+      bilder: $("#f_links").value.split("\n").map((s) => s.trim()).filter(Boolean).join(" | "),
+      aktiv: $("#f_active").checked ? "ja" : "nein", notiz: $("#f_note").value.trim(),
+    };
+    Object.keys(rec).forEach((k) => k.startsWith("_") && delete rec[k]);
+    try {
+      // Fotos zuerst, damit das nächste Video sie schon hat
+      let i = 0;
+      for (const ph of st.pending) {
+        btn.textContent = `Lädt Foto ${++i}/${st.pending.length} …`;
+        await putFile(`assets/products/${id}/${Date.now()}_${i}.jpg`, ph.dataUrl.split(",")[1], null, `Foto für ${name}`);
+      }
+      for (const path of st.removed) { const f = st.photos.find((x) => x.path === path); if (f) await deleteFile(path, f.sha, `Foto entfernt: ${name}`); }
+      btn.textContent = "Speichert …";
+      await saveProducts((list) => { const idx = list.findIndex((x) => x.id === id); if (idx >= 0) list[idx] = { ...list[idx], ...rec }; else list.push(rec); }, `${isNew ? "Neues Produkt" : "Produkt geändert"}: ${name}`);
+      close(); scoreAll(); render(); toast("Gespeichert");
+    } catch (err) { btn.disabled = false; btn.textContent = "Speichern"; toast("Speichern fehlgeschlagen: " + err.message, 4000); }
+  });
+
+  $("#edDelete")?.addEventListener("click", async () => {
+    if (!(await ask("Produkt löschen?", `„${d.name}“ wird aus der Liste entfernt. Fotos bleiben im Repository.`, "Löschen", true))) return;
+    try { await saveProducts((list) => { const i = list.findIndex((x) => x.id === d.id); if (i >= 0) list.splice(i, 1); }, `Produkt gelöscht: ${d.name}`); close(); scoreAll(); render(); toast("Gelöscht"); }
+    catch (err) { toast("Löschen fehlgeschlagen: " + err.message, 4000); }
+  });
+}
+
+/* Speichert die Produktliste; holt bei Konflikt den neuesten Stand und wendet die Änderung erneut an */
+async function saveProducts(mutate, message) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt) { const f = await getText("products.csv", S.conn.branch); const p = productsFromCSV(f.text || ""); S.products = p.items; S.header = p.header; S.productsSha = f.sha; }
+    // Reihenfolge der Datei beibehalten (die Anzeige ist nach Score sortiert)
+    const list = [...S.products].sort((a, b) => (a._i ?? 1e9) - (b._i ?? 1e9)).map((p) => { const o = {}; S.header.forEach((h) => (o[h] = p[h] ?? "")); return o; });
+    mutate(list);
+    list.forEach((o, i) => (o._i = i));
+    const before = S.products; S.products = list;
+    try { S.productsSha = await putFile("products.csv", b64encode(productsToCSV()), S.productsSha, message); return; }
+    catch (err) { S.products = before; if (err.status !== 409 || attempt) throw err; }
+  }
+}
+
+/* ---------- Einstellungen */
+function viewSettings() {
+  const c = S.cfg;
+  return `<div class="view">
+    <h2 style="font-size:24px">Einstellungen</h2>
+    <form class="card" id="setForm">
+      <label class="field">Videos pro Tag<span class="hint">Lieber 2–3 gute als viele gleiche. Maximal 5.</span>
+        <select id="s_count">${[1, 2, 3, 4, 5].map((n) => `<option ${n === c.videos_pro_tag ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+      <label class="switch"><span><b>Affiliate aktiv</b><br><span class="muted small">Erst einschalten, wenn TikTok dich für Shop-Affiliate freigeschaltet hat. Dann sagt das Video „Link im Video“ und die Caption bekommt #Werbung.</span></span><input id="s_aff" type="checkbox" ${c.affiliate_aktiv ? "checked" : ""}></label>
+      <label class="field">Stimme<select id="s_voice">${VOICES.map(([v, l]) => `<option value="${v}" ${v === c.stimme ? "selected" : ""}>${l}</option>`).join("")}${VOICES.some(([v]) => v === c.stimme) ? "" : `<option value="${esc(c.stimme)}" selected>${esc(c.stimme)}</option>`}</select></label>
+      <label class="field">Vorgeschlagene Postzeiten<span class="hint">Durch Komma getrennt, z. B. 12:30, 18:00, 20:30</span><input id="s_times" type="text" value="${esc(c.postzeiten.join(", "))}"></label>
+      <div class="grid2">
+        <label class="field">Pause pro Produkt (Tage)<input id="s_cool" type="number" min="1" max="30" value="${c.wiederholung_nach_tagen}"></label>
+        <label class="field">Max. Videos pro Produkt<input id="s_max" type="number" min="1" max="20" value="${c.max_videos_pro_produkt}"></label>
+      </div>
+      <button class="btn primary" type="submit" id="setSave">Einstellungen speichern</button>
+    </form>
+    <div class="card">
+      <h3>Verbindung</h3>
+      <div class="muted small">Repository <b>${esc(S.conn.owner)}/${esc(S.conn.repo)}</b> · Branch ${esc(S.conn.branch)}</div>
+      <div class="row">
+        <a class="btn ghost sm grow" href="https://github.com/${esc(S.conn.owner)}/${esc(S.conn.repo)}/actions" target="_blank" rel="noopener">Läufe auf GitHub</a>
+        <button class="btn danger sm grow" id="logout">Abmelden</button>
+      </div>
+      <div class="muted small">Der Token liegt nur in diesem Browser. Läuft er ab, meldest du dich einfach neu an.</div>
+    </div></div>`;
+}
+function bindSettings() {
+  $("#setForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = $("#setSave"); btn.disabled = true; btn.textContent = "Speichert …";
+    const times = $("#s_times").value.split(",").map((s) => s.trim()).filter((s) => /^\d{1,2}:\d{2}$/.test(s));
+    let t = S.configText;
+    t = setCfg(t, "videos_pro_tag", $("#s_count").value);
+    t = setCfg(t, "affiliate_aktiv", $("#s_aff").checked ? "true" : "false");
+    t = setCfg(t, "stimme", `"${$("#s_voice").value}"`);
+    if (times.length) t = setCfg(t, "postzeiten", "[" + times.map((x) => `"${x}"`).join(", ") + "]");
+    t = setCfg(t, "wiederholung_nach_tagen", String(Math.max(1, parseInt($("#s_cool").value) || 4)));
+    t = setCfg(t, "max_videos_pro_produkt", String(Math.max(1, parseInt($("#s_max").value) || 4)));
+    try {
+      S.configSha = await putFile("config.toml", b64encode(t), S.configSha, "Einstellungen aus der App geändert");
+      S.configText = t; S.cfg = readCfg(t); scoreAll(); toast("Gespeichert");
+    } catch (err) {
+      toast(err.status === 409 ? "Datei wurde inzwischen geändert – App neu laden" : "Speichern fehlgeschlagen: " + err.message, 4000);
+    }
+    btn.disabled = false; btn.textContent = "Einstellungen speichern";
+  });
+  $("#logout").addEventListener("click", async () => {
+    if (!(await ask("Abmelden?", "Der Token wird von diesem Gerät gelöscht.", "Abmelden", true))) return;
+    LS.del("conn"); S.conn = null; S.loaded = false; clearTimeout(S.pollTimer); $("#runChip").hidden = true; render();
+  });
+}
+
+/* ---------------------------------------------------------------- Start */
+document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("click", () => {
+  S.tab = b.dataset.tab; LS.set("tab", S.tab); render(); window.scrollTo(0, 0);
+}));
+
+async function start() {
+  render();
+  if (!S.conn) return;
+  try {
+    await loadAll();
+    S.count = Math.min(5, Math.max(1, S.cfg.videos_pro_tag || 1));
+    render(); loadRuns();
+  } catch (err) {
+    if (err.status === 401) { LS.del("conn"); S.conn = null; render(); $("#app").innerHTML = viewSetup("Token abgelaufen oder ungültig – bitte neu verbinden."); bindSetup(); return; }
+    $("#app").innerHTML = `<div class="view"><div class="notice bad">${esc(err.message)}</div><button class="btn primary" onclick="location.reload()">Neu laden</button></div>`;
+  }
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && S.conn && S.loaded) loadRuns(); });
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+start();
+</script>
+</body>
+</html>
