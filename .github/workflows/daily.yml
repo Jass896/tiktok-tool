@@ -1,0 +1,81 @@
+name: Tägliche TikTok-Videos
+
+on:
+  schedule:
+    # Jeden Tag um 06:23 UTC (= 07:23 Winterzeit / 08:23 Sommerzeit in Österreich)
+    - cron: "23 6 * * *"
+  workflow_dispatch:
+    inputs:
+      count:
+        description: "Wie viele Videos? (leer = Wert aus config.toml)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-videos
+  cancel-in-progress: false
+
+jobs:
+  videos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: ffmpeg & Schrift installieren
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-dejavu-core
+
+      - name: Python-Pakete installieren
+        run: pip install -r requirements.txt
+
+      - name: Videos erstellen
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+        run: |
+          COUNT="${{ github.event.inputs.count }}"
+          python run.py rank
+          python run.py daily ${COUNT:+--count $COUNT}
+
+      - name: Videos in der App bereitstellen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -rf pub && mkdir pub
+          if git ls-remote --exit-code --heads origin videos >/dev/null 2>&1; then
+            git fetch -q --depth=1 origin videos
+            git archive FETCH_HEAD | tar -x -C pub
+          fi
+          python -m tool.publish pub
+          cd pub
+          git init -q -b videos
+          git add -A
+          git -c user.name="video-bot" -c user.email="video-bot@users.noreply.github.com" commit -qm "Videos $(date +%F)"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" videos
+
+      - name: Verlauf speichern
+        if: always()
+        run: |
+          git config user.name "video-bot"
+          git config user.email "video-bot@users.noreply.github.com"
+          git add data/history.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -qm "Verlauf aktualisiert $(date +%F)"
+            # Falls du in der Zwischenzeit in der App etwas geändert hast
+            git pull -q --rebase origin "${GITHUB_REF_NAME}" || true
+            git push -q || true
+          fi
