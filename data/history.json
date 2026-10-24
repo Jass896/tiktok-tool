@@ -1,0 +1,32 @@
+[
+  {
+    "created": "2026-10-24T07:08:02+00:00",
+    "product_id": "mini-mixer",
+    "product": "Tragbarer Mini-Mixer USB-C",
+    "angle": "geheimtipp",
+    "hook": "Kennt fast niemand",
+    "text_source": "vorlage",
+    "video": "0706_1_mini-mixer.mp4",
+    "delivered": []
+  },
+  {
+    "created": "2026-10-24T07:08:02+00:00",
+    "product_id": "handyhalter-auto",
+    "product": "Magnetischer Handyhalter fürs Auto",
+    "angle": "gründe",
+    "hook": "Kurz erklärt",
+    "text_source": "vorlage",
+    "video": "0707_2_handyhalter-auto.mp4",
+    "delivered": []
+  },
+  {
+    "created": "2026-10-24T07:08:02+00:00",
+    "product_id": "led-spiegel",
+    "product": "LED Schminkspiegel mit Touch",
+    "angle": "gründe",
+    "hook": "Kurz erklärt",
+    "text_source": "vorlage",
+    "video": "0707_3_led-spiegel.mp4",
+    "delivered": []
+  }
+]
