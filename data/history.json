@@ -78,5 +78,35 @@
     "text_source": "vorlage",
     "video": "0728_1_fusselrasierer.mp4",
     "delivered": []
+  },
+  {
+    "created": "2026-11-02T07:50:47+00:00",
+    "product_id": "mini-mixer",
+    "product": "Tragbarer Mini-Mixer USB-C",
+    "angle": "vorher-nachher",
+    "hook": "Vorher vs. nachher",
+    "text_source": "vorlage",
+    "video": "0749_1_mini-mixer.mp4",
+    "delivered": []
+  },
+  {
+    "created": "2026-11-02T07:50:47+00:00",
+    "product_id": "handyhalter-auto",
+    "product": "Magnetischer Handyhalter fürs Auto",
+    "angle": "ungläubig",
+    "hook": "Warum hat mir das keiner gesagt?",
+    "text_source": "vorlage",
+    "video": "0750_2_handyhalter-auto.mp4",
+    "delivered": []
+  },
+  {
+    "created": "2026-11-02T07:50:47+00:00",
+    "product_id": "led-spiegel",
+    "product": "LED Schminkspiegel mit Touch",
+    "angle": "geheimtipp",
+    "hook": "Mein Geheimtipp",
+    "text_source": "vorlage",
+    "video": "0750_3_led-spiegel.mp4",
+    "delivered": []
   }
 ]
