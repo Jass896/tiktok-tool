@@ -108,5 +108,15 @@
     "text_source": "vorlage",
     "video": "0750_3_led-spiegel.mp4",
     "delivered": []
+  },
+  {
+    "created": "2026-11-03T07:38:39+00:00",
+    "product_id": "fusselrasierer",
+    "product": "Elektrischer Fusselrasierer",
+    "angle": "vorher-nachher",
+    "hook": "Kleiner Unterschied, großer Effekt",
+    "text_source": "vorlage",
+    "video": "0738_1_fusselrasierer.mp4",
+    "delivered": []
   }
 ]
